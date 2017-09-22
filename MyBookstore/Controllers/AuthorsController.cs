@@ -60,12 +60,14 @@ namespace MyBookstore.Controllers
         public ActionResult Create()
         {
             return View();
-        }
+            
+    }
 
         // POST: Authors/Create
         [HttpPost]
-        public ActionResult Create(FormCollection collection)
+        public ActionResult Create(AuthorsModels author)
         {
+            /*
             try
             {
                 // TODO: Add insert logic here
@@ -76,19 +78,90 @@ namespace MyBookstore.Controllers
             {
                 return View();
             }
-        }
+          */
+            using (SqlConnection con = new SqlConnection(Helper.GetCon()))
+            {
+                con.Open();
+                string query = @"INSERT INTO authors VALUES
+                    (@authorLN, @authorFN, @authorPhone,
+                     @authorAddress, @authorCity, @authorState,
+                     @authorZip)";
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@authorLN", author.LastName);
+                    cmd.Parameters.AddWithValue("@authorFN", author.FirstName);
+                    cmd.Parameters.AddWithValue("@authorPhone", author.Phone);
+                    cmd.Parameters.AddWithValue("@authorAddress", author.Address);
+                    cmd.Parameters.AddWithValue("@authorCity", author.City);
+                    cmd.Parameters.AddWithValue("@authorState", author.State);
+                    cmd.Parameters.AddWithValue("@authorZip", author.Zip);
+                    cmd.ExecuteNonQuery();
+                    return RedirectToAction("Index");
+                }
+                
+                     
+            }
+    }
 
         // GET: Authors/Edit/5
-        public ActionResult Edit(int id)
+        public ActionResult Edit(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            AuthorsModels author = new AuthorsModels();
+
+            using (SqlConnection con = new SqlConnection(Helper.GetCon()))
+            {
+                con.Open();
+                string query = @"SELECT authorLN, authorFN, authorPhone,
+                     authorAddress, authorCity, authorState,
+                     authorZip FROM authors 
+                     WHERE authorID=@authorID";
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@authorID", id);
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if(dr.HasRows) // record is existing
+                        {
+
+                            while (dr.Read())
+                            {
+                                author.LastName = dr["authorLN"].ToString();
+                                author.FirstName = dr["authorFN"].ToString();
+                                author.Phone = dr["authorPhone"].ToString();
+                                author.Address= dr["authorAddress"].ToString();
+                                author.City = dr["authorCity"].ToString();
+                                author.State = dr["authorState"].ToString();
+                                author.Zip = dr["authorZip"].ToString();
+
+
+                            }
+                            return View(author);
+
+
+                        }
+                        else
+                        {
+                            return RedirectToAction("Index");
+                        }
+                    }
+                }
+
+            }
+
+
+                return View();
         }
 
         // POST: Authors/Edit/5
         [HttpPost]
-        public ActionResult Edit(int id, FormCollection collection)
+        public ActionResult Edit(AuthorsModels author)
         {
-            try
+            /*try
             {
                 // TODO: Add update logic here
 
@@ -98,12 +171,54 @@ namespace MyBookstore.Controllers
             {
                 return View();
             }
+            */
+            using (SqlConnection con = new SqlConnection(Helper.GetCon()))
+            {
+                con.Open();
+                string query = @"UPDATE authors SET authorLN=@authorLN, authorFN=@authorFN,
+                                authorPhone=@authorPhone, authorAddress=@authorAddress, authorCity=@authorCity,
+                                authorState=@authorState, authorZip=@authorZip
+                                WHERE authorID=@authorID";
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@authorLN", author.LastName);
+                    cmd.Parameters.AddWithValue("@authorFN", author.FirstName);
+                    cmd.Parameters.AddWithValue("@authorPhone", author.Phone);
+                    cmd.Parameters.AddWithValue("@authorAddress", author.Address);
+                    cmd.Parameters.AddWithValue("@authorCity", author.City);
+                    cmd.Parameters.AddWithValue("@authorState", author.State);
+                    cmd.Parameters.AddWithValue("@authorZip", author.Zip);
+                    cmd.Parameters.AddWithValue("@authorID", author.ID);
+                    cmd.ExecuteNonQuery();
+
+                    return RedirectToAction("Index");
+                }
+            }
         }
 
         // GET: Authors/Delete/5
-        public ActionResult Delete(int id)
+        public ActionResult Delete(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return RedirectToAction("Index");
+            }
+            
+            using (SqlConnection con = new SqlConnection(Helper.GetCon()))
+            {
+                con.Open();
+                string query = @"DELETE FROM authors WHERE authorID=@authorID";
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@authorID", id);
+                    cmd.ExecuteNonQuery();
+                    return RedirectToAction("Index");
+
+                }
+
+            }
+
+               
         }
 
         // POST: Authors/Delete/5
